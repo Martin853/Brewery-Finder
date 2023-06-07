@@ -6,5 +6,5 @@ import retrofit2.http.Query
 
 interface BreweryApi {
     @GET("/v1/breweries")
-    fun getBreweries(@Query("per_page") per_page: Int): Response<List<Brewery>>
+    suspend fun getBreweries(@Query("per_page") per_page: Int): Response<List<Brewery>>
 }
