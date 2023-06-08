@@ -44,8 +44,8 @@ class BreweryAdapter : RecyclerView.Adapter<BreweryAdapter.BreweryViewHolder>() 
         holder.binding.apply {
             val brewery = breweries[position]
             tvTitle.text = brewery.name
-            tvAddressStreet.text = brewery.address_1
-            tvCityState.text = brewery.city
+            tvAddressStreet.text = "${brewery.address_1}, ${brewery.street}"
+            tvCityState.text = "${brewery.city}, ${brewery.state}"
         }
     }
 }
