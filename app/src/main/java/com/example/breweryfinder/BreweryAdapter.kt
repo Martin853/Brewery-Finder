@@ -12,8 +12,10 @@ import com.example.breweryfinder.databinding.ItemBreweryBinding
 
 class BreweryAdapter : RecyclerView.Adapter<BreweryAdapter.BreweryViewHolder>() {
 
+    // ViewHolder class for recycle view items
     inner class BreweryViewHolder (val binding: ItemBreweryBinding) : RecyclerView.ViewHolder(binding.root)
 
+    // Callback to calculate differences between lists
     private val diffCallback = object : DiffUtil.ItemCallback<Brewery>() {
         override fun areItemsTheSame(oldItem: Brewery, newItem: Brewery): Boolean {
             return oldItem.id == newItem.id
@@ -25,12 +27,15 @@ class BreweryAdapter : RecyclerView.Adapter<BreweryAdapter.BreweryViewHolder>() 
     }
 
     private val differ = AsyncListDiffer(this, diffCallback)
+
+    // List of breweries
     var breweries : MutableList<Brewery>
         get() = differ.currentList
         set(value) { differ.submitList(value) }
 
     override fun getItemCount() = breweries.size
 
+    // Create a viewholder by inflating the item_brewery layout
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BreweryViewHolder {
         return BreweryViewHolder(ItemBreweryBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -39,13 +44,16 @@ class BreweryAdapter : RecyclerView.Adapter<BreweryAdapter.BreweryViewHolder>() 
         ))
     }
 
-
+    // Bind and set the data
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: BreweryViewHolder, position: Int) {
         holder.binding.apply {
             val brewery = breweries[position]
             tvTitle.text = brewery.name
             tvAddressStreet.text = "${brewery.address_1}, ${brewery.street}"
             tvCityState.text = "${brewery.city}, ${brewery.state}"
+            tvLatitude.text =  "Latitude: ${brewery.latitude}"
+            tvLongtitude.text = "Longtitude: ${brewery.longitude}"
         }
     }
 }
