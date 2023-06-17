@@ -6,9 +6,10 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="14dp"
     android:layout_marginBottom="14dp"
-    android:background="@drawable/border"
+    android:background="@color/material_dynamic_neutral_variant95"
     android:paddingTop="16dp"
     android:paddingBottom="16dp">
+
 
     <TextView
         android:id="@+id/tvTitle"
@@ -81,7 +82,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvLatitude"
         tools:text="Placeholder Longtitude" />
-
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

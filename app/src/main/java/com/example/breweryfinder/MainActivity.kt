@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.breweryfinder.databinding.ActivityMainBinding
 import retrofit2.HttpException
 import java.io.IOException
@@ -18,8 +19,10 @@ const val TAG = "MainActivity"
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
     private lateinit var breweryAdapter: BreweryAdapter
+    private var page = 1
+    private var isLoading = false
+    private var isLastPage = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,45 +30,69 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupRecyclerView()
 
-        lifecycleScope.launchWhenCreated {
-            binding.progressBar.isVisible = true
+        loadData()
 
-            // Check if there is saved data
-            val savedData = DataStorageManager.getData(this@MainActivity)
-            if (savedData != null) {
-                // Render the saved data
-                val breweries = parseBreweries(savedData)
-                breweryAdapter.breweries = breweries as MutableList<Brewery>
-                binding.progressBar.isVisible = false
-            } else {
-                // Fetch data from API
-                val response = try {
-                    RetrofitInstance.api.getBreweries(6)
-                } catch (e: IOException) {
-                    Log.e(TAG, "IOException, you might not have an internet connection")
-                    binding.progressBar.isVisible = false
-                    return@launchWhenCreated
-                } catch (e: HttpException) {
-                    Log.e(TAG, "HttpException, unexpected response")
-                    binding.progressBar.isVisible = false
-                    return@launchWhenCreated
+        binding.rvBreweries.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if (newState == RecyclerView.SCROLL_STATE_IDLE && !recyclerView.canScrollVertically(1)) {
+                    // Reached the end of the list
+                    if (!isLoading && !isLastPage) {
+                        page++
+                        loadData()
+                    }
                 }
-
-                if (response.isSuccessful && response.body() != null) {
-                    val breweries = response.body() as MutableList<Brewery>
-                    breweryAdapter.breweries = breweries
-
-                    // Save the fetched data
-                    val dataToSave = convertBreweriesToString(breweries)
-                    DataStorageManager.saveData(this@MainActivity, dataToSave)
-                } else {
-                    Log.e(TAG, "Response not successful")
-                }
-
-                binding.progressBar.isVisible = false
             }
+        })
+    }
+
+    private fun loadData() {
+        lifecycleScope.launchWhenCreated {
+            if (page == 1) {
+                binding.progressBar.isVisible = true
+            }
+
+            val response = try {
+                RetrofitInstance.api.getBreweries(6)
+            } catch (e: IOException) {
+                Log.e(TAG, "IOException, you might not have an internet connection")
+                handleDataLoadError()
+                return@launchWhenCreated
+            } catch (e: HttpException) {
+                Log.e(TAG, "HttpException, unexpected response")
+                handleDataLoadError()
+                return@launchWhenCreated
+            }
+
+            if (response.isSuccessful && response.body() != null) {
+                val breweries = response.body() as MutableList<Brewery>
+                if (page == 1) {
+                    breweryAdapter.breweries = breweries
+                    DataStorageManager.saveData(this@MainActivity, convertBreweriesToString(breweries))
+                } else {
+                    breweryAdapter.addBreweries(breweries)
+                    isLoading = false
+                    if (breweries.isEmpty()) {
+                        isLastPage = true
+                    }
+                }
+            } else {
+                Log.e(TAG, "Response not successful")
+                handleDataLoadError()
+            }
+
+            binding.progressBar.isVisible = false
         }
     }
+
+    private fun handleDataLoadError() {
+        if (page == 1) {
+            binding.progressBar.isVisible = false
+        } else {
+            isLoading = false
+        }
+    }
+
 
     // Convert breweries to JSON string
     private fun convertBreweriesToString(breweries: List<Brewery>): String {

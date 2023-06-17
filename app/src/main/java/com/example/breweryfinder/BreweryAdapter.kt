@@ -56,4 +56,11 @@ class BreweryAdapter : RecyclerView.Adapter<BreweryAdapter.BreweryViewHolder>() 
             tvLongtitude.text = "Longtitude: ${brewery.longitude}"
         }
     }
+
+    fun addBreweries(newBreweries: List<Brewery>) {
+        val updatedList = mutableListOf<Brewery>()
+        updatedList.addAll(breweries)
+        updatedList.addAll(newBreweries)
+        breweries = updatedList
+    }
 }
